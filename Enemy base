@@ -1,0 +1,32 @@
+# EnemyBase.gd
+extends CharacterBody2D
+
+@export var base_speed: float = 80.0
+@export var acceleration: float = 5.0   # how much speed increases per second
+@export var damage: int = 0             # hp damage (0 = instant death enemy)
+@export var catch_message: String = ""
+@export var instant_death: bool = false
+
+var current_speed: float
+
+func _ready() -> void:
+    current_speed = base_speed
+
+func _physics_process(delta: float) -> void:
+    # Enemies chase the player (assumes player is named "Player")
+    var player = get_tree().current_scene.get_node("Player")
+    if player:
+        var direction = (player.global_position - global_position).normalized()
+        velocity = direction * current_speed
+        move_and_slide()
+
+    # Gradually increase speed
+    current_speed += acceleration * delta
+
+func _on_body_entered(body: Node) -> void:
+    if body.name == "Player":
+        var player = body
+        if instant_death:
+            player.die()  # Player must have a die() method
+        else:
+            player.take_damage(damage, catch_message)
